@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,10 +9,18 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { StaggerGroup, StaggerItem } from "@/components/shared/reveal-on-scroll";
 import { pricingTiers, type BillingCycle } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useCtaModals } from "@/components/cta/use-cta-modals";
 
 export function Pricing() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const isAnnual = cycle === "annual";
+  const { openBookDemo, openFreeTrial, openContactSales } = useCtaModals();
+
+  const handleTierCta = (tierName: string, cta: string) => {
+    if (cta === "Start Free Trial") openFreeTrial(tierName);
+    else if (cta === "Contact Sales") openContactSales(tierName);
+    else openBookDemo(tierName);
+  };
 
   return (
     <section id="pricing" className="py-20 sm:py-28">
@@ -84,8 +91,9 @@ export function Pricing() {
                   <span className="text-sm text-muted-foreground">/mo</span>
                 </div>
 
-                <Link
-                  href="#faq"
+                <button
+                  type="button"
+                  onClick={() => handleTierCta(tier.name, tier.cta)}
                   className={cn(
                     buttonVariants({
                       size: "lg",
@@ -95,7 +103,7 @@ export function Pricing() {
                   )}
                 >
                   {tier.cta}
-                </Link>
+                </button>
 
                 <ul className="mt-8 flex flex-1 flex-col gap-3">
                   {tier.features.map((feature) => (

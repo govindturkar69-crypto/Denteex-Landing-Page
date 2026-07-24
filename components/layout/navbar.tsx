@@ -9,9 +9,11 @@ import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { Logo } from "@/components/shared/logo";
 import { navLinks, hero } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useCtaModals } from "@/components/cta/use-cta-modals";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { openBookDemo } = useCtaModals();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -55,12 +57,13 @@ export function Navbar() {
 
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
-          <Link
-            href={hero.primaryCta.href}
+          <button
+            type="button"
+            onClick={() => openBookDemo()}
             className={cn(buttonVariants(), "hidden sm:inline-flex")}
           >
             {hero.primaryCta.label}
-          </Link>
+          </button>
           <MobileDrawer />
         </div>
       </div>

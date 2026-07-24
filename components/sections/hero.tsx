@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { HeroScene } from "@/components/three/hero-scene";
 import { brand, hero } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useCtaModals } from "@/components/cta/use-cta-modals";
 
 const container: Variants = {
   hidden: {},
@@ -23,6 +24,8 @@ const item: Variants = {
 };
 
 export function Hero() {
+  const { openBookDemo } = useCtaModals();
+
   return (
     <section className="relative overflow-hidden pt-16 pb-20 sm:pt-20 sm:pb-28">
       <div
@@ -65,8 +68,9 @@ export function Hero() {
             variants={item}
             className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
           >
-            <Link
-              href={hero.primaryCta.href}
+            <button
+              type="button"
+              onClick={() => openBookDemo()}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "h-11 w-full px-6 text-base sm:w-auto"
@@ -74,7 +78,7 @@ export function Hero() {
             >
               {hero.primaryCta.label}
               <ArrowRight className="size-4" />
-            </Link>
+            </button>
             <Link
               href={hero.secondaryCta.href}
               className={cn(

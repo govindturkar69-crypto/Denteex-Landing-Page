@@ -14,9 +14,11 @@ import {
 import { Logo } from "@/components/shared/logo";
 import { navLinks, hero } from "@/lib/content";
 import { cn } from "@/lib/utils";
+import { useCtaModals } from "@/components/cta/use-cta-modals";
 
 export function MobileDrawer() {
   const [open, setOpen] = useState(false);
+  const { openBookDemo } = useCtaModals();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -51,13 +53,16 @@ export function MobileDrawer() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-2 p-4">
-          <Link
-            href={hero.primaryCta.href}
-            onClick={() => setOpen(false)}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              openBookDemo();
+            }}
             className={cn(buttonVariants(), "w-full")}
           >
             {hero.primaryCta.label}
-          </Link>
+          </button>
         </div>
       </SheetContent>
     </Sheet>
