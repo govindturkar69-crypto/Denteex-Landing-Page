@@ -2,14 +2,21 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// Turbopack's dev HMR client needs 'unsafe-eval'/'unsafe-inline' for script-src.
-// Production builds don't require either. style-src keeps 'unsafe-inline' in
-// both modes because Framer Motion animates via inline `style` attributes —
-// see SECURITY.md for why that's an accepted, documented tradeoff rather than
-// an oversight.
+// script-src and style-src both keep 'unsafe-inline':
+// - style-src: Framer Motion animates via inline `style` attributes on every
+//   animated element — there's no nonce mechanism for style attributes (only
+//   for <style> tags), so this is unavoidable short of dropping Framer Motion.
+// - script-src: Next.js's App Router emits its own inline <script> tags for
+//   streaming/hydration payloads on every page. A nonce-based CSP is the
+//   "correct" way to allow only those, but requires Next.js to consistently
+//   stamp the same nonce onto every script it emits, and in practice (Next.js
+//   16, tested against a local production build) it did not do so reliably —
+//   using 'strict-dynamic' without a correctly-applied nonce blocked even the
+//   same-origin chunk scripts entirely, breaking the page.  'unsafe-inline'
+//   is the pragmatic, verified-working tradeoff instead. See SECURITY.md.
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' ${isDev ? `'unsafe-eval' 'unsafe-inline'` : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? ` 'unsafe-eval'` : ""}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data:`,
   `font-src 'self'`,
