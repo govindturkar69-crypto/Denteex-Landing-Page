@@ -19,11 +19,11 @@ An ultra-modern, 3D-animated landing page & lightweight application shell for **
 
 <br/>
 
-**[🚀 Live Demo](#-live-demo)** &nbsp;•&nbsp;
+**[🚀 Live Demo](https://denteex-landing-page.vercel.app/)** &nbsp;•&nbsp;
 **[📖 Documentation](./REQUIREMENTS.md)** &nbsp;•&nbsp;
 **[🔒 Security](./SECURITY.md)** &nbsp;•&nbsp;
-**[🐛 Report Bug](#-license--author)** &nbsp;•&nbsp;
-**[✨ Request Feature](#-license--author)**
+**[🐛 Report Bug](https://github.com/govindturkar69-crypto/Denteex-Landing-Page/issues)** &nbsp;•&nbsp;
+**[✨ Request Feature](https://github.com/govindturkar69-crypto/Denteex-Landing-Page/issues)**
 
 </div>
 
@@ -31,7 +31,9 @@ An ultra-modern, 3D-animated landing page & lightweight application shell for **
 
 ## 📍 Live Demo
 
-> **Not yet deployed.** This README is written ahead of the first production deploy — see [🚀 Deployment Guide](#-deployment-guide-vercel--github) below. Once live, the URL goes right here.
+### 🔗 **[denteex-landing-page.vercel.app](https://denteex-landing-page.vercel.app/)**
+
+Deployed on Vercel, straight from the [GitHub repo](https://github.com/govindturkar69-crypto/Denteex-Landing-Page) — see the [🚀 Deployment Guide](#-deployment-guide-vercel--github) below for how to deploy your own copy.
 
 ---
 
@@ -149,8 +151,8 @@ Framer Motion scroll reveals and stagger animations (all respecting `prefers-red
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd Denteex
+git clone https://github.com/govindturkar69-crypto/Denteex-Landing-Page.git
+cd Denteex-Landing-Page
 ```
 
 ### 2. Install dependencies
@@ -219,9 +221,9 @@ Denteex is built with a **real, honest security baseline** — not security thea
 
 ### One-click deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=%3Cyour-github-repo-url%3E)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fgovindturkar69-crypto%2FDenteex-Landing-Page)
 
-> Replace `<your-github-repo-url>` in the badge link above once you've pushed this repo to GitHub — the button needs a real public repo URL to clone from.
+> Click to spin up your own copy from this repo.
 
 ### Manual: Vercel CLI (no GitHub required)
 
@@ -244,7 +246,7 @@ vercel --prod   # promote to production
 In **Vercel → Project → Settings → Environment Variables**:
 
 ```
-NEXT_PUBLIC_SITE_URL=https://your-actual-domain.vercel.app
+NEXT_PUBLIC_SITE_URL=https://denteex-landing-page.vercel.app
 ```
 
 Used by [`lib/cors.ts`](./lib/cors.ts) to enforce the same-origin policy on API routes.
@@ -323,7 +325,7 @@ This is a **portfolio / demonstration project** — no LICENSE file has been add
 
 ### Contributing
 
-This repo doesn't yet have a public issue tracker — the Report Bug / Request Feature links at the top of this README will light up once it's pushed to GitHub. In the meantime:
+Found a bug or have a feature idea? Open an issue on the [GitHub repo](https://github.com/govindturkar69-crypto/Denteex-Landing-Page/issues).
 
 - 📧 Contact: `hello@example.com` *(placeholder — not a live inbox)*
 - 🤖 **AI workflow note:** this build used Claude to scaffold each section independently from a shared content model (`lib/content.ts`), then iterated on visual and architectural details through targeted, reviewed prompts rather than one large unreviewed generation pass.
