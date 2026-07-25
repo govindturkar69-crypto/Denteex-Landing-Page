@@ -107,7 +107,7 @@ Framer Motion scroll reveals and stagger animations (all respecting `prefers-red
 <summary><b>Hero Section — Interactive 3D Tooth</b></summary>
 <br/>
 
-![Hero section placeholder](https://placehold.co/1200x630/0f172a/5fd7c8?text=Hero+Section+%E2%80%94+Add+Screenshot+or+GIF&font=raleway)
+![Hero section — interactive 3D tooth](./docs/screenshots/hero.png)
 
 </details>
 
@@ -115,7 +115,7 @@ Framer Motion scroll reveals and stagger animations (all respecting `prefers-red
 <summary><b>3D Odontogram Playground</b></summary>
 <br/>
 
-![3D odontogram placeholder](https://placehold.co/1200x630/0f172a/ff9b6a?text=3D+Odontogram+Playground+%E2%80%94+Add+Screenshot+or+GIF&font=raleway)
+![3D odontogram playground](./docs/screenshots/odontogram-playground.png)
 
 </details>
 
@@ -123,19 +123,19 @@ Framer Motion scroll reveals and stagger animations (all respecting `prefers-red
 <summary><b>ROI Calculator</b></summary>
 <br/>
 
-![ROI calculator placeholder](https://placehold.co/1200x630/0f172a/5fd7c8?text=ROI+%26+Savings+Calculator+%E2%80%94+Add+Screenshot+or+GIF&font=raleway)
+![ROI calculator](./docs/screenshots/roi-calculator.png)
 
 </details>
 
 <details>
-<summary><b>Mobile Responsiveness (375px → 1280px)</b></summary>
+<summary><b>Mobile Responsiveness (full page, 375px wide)</b></summary>
 <br/>
 
-![Mobile responsiveness placeholder](https://placehold.co/1200x630/0f172a/f6f3ec?text=Mobile+%2F+Tablet+%2F+Desktop+%E2%80%94+Add+Screenshot+or+GIF&font=raleway)
+<img src="./docs/screenshots/mobile-responsive.png" width="375" alt="Mobile responsiveness — full page at 375px width" />
 
 </details>
 
-> 💡 Replace the placeholders above with real screenshots or GIFs in `docs/screenshots/` once you have them — that's the single highest-impact thing you can do for this README.
+> 📸 Captured directly from the running app with a headless Playwright script (`scripts/capture-screenshots.mjs`) — not hand-picked marketing shots.
 
 ---
 
