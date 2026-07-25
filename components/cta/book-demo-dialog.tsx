@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,10 +18,10 @@ import {
 import { ConfettiBurst } from "@/components/cta/confetti-burst";
 import { cn } from "@/lib/utils";
 import { clinicSizes, getUpcomingWeekdays, timeSlots } from "@/lib/cta-content";
+import { bookDemoSchema } from "@/lib/schemas";
 
-type Status = "form" | "loading" | "success";
+type Status = "form" | "loading" | "success" | "error";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const upcomingDays = getUpcomingWeekdays(5);
 
 function AnimatedCheckmark() {
@@ -64,6 +64,7 @@ export function BookDemoDialog({
 }) {
   const [wizardStep, setWizardStep] = useState<1 | 2>(1);
   const [status, setStatus] = useState<Status>("form");
+  const [errorMessage, setErrorMessage] = useState("");
   const [clinicSize, setClinicSize] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -73,12 +74,23 @@ export function BookDemoDialog({
   const [whatsapp, setWhatsapp] = useState("");
   const [touched, setTouched] = useState(false);
 
-  const step1Valid = Boolean(clinicSize && selectedDay && selectedTime);
-  const doctorValid = doctorName.trim().length > 1;
-  const clinicValid = clinicName.trim().length > 1;
-  const emailValid = EMAIL_RE.test(email);
-  const whatsappValid = whatsapp.replace(/\D/g, "").length >= 7;
-  const step2Valid = doctorValid && clinicValid && emailValid && whatsappValid;
+  const parsed = useMemo(
+    () =>
+      bookDemoSchema.safeParse({
+        clinicSize,
+        date: selectedDay,
+        time: selectedTime,
+        doctorName,
+        clinicName,
+        email,
+        whatsapp,
+      }),
+    [clinicSize, selectedDay, selectedTime, doctorName, clinicName, email, whatsapp]
+  );
+
+  const fieldErrors = parsed.success ? {} : parsed.error.flatten().fieldErrors;
+  const step1Valid =
+    !fieldErrors.clinicSize && !fieldErrors.date && !fieldErrors.time;
 
   const selectedDayLabel = upcomingDays.find((d) => d.iso === selectedDay);
   const clinicSizeLabel = clinicSizes.find((c) => c.id === clinicSize)?.label;
@@ -86,6 +98,7 @@ export function BookDemoDialog({
   const reset = () => {
     setWizardStep(1);
     setStatus("form");
+    setErrorMessage("");
     setClinicSize(null);
     setSelectedDay(null);
     setSelectedTime(null);
@@ -104,10 +117,28 @@ export function BookDemoDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!step2Valid || status === "loading") return;
+    if (!parsed.success || status === "loading") return;
+
     setStatus("loading");
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-    setStatus("success");
+    try {
+      const res = await fetch("/api/book-demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        setErrorMessage(
+          json?.error ?? "Something went wrong. Please try again."
+        );
+        setStatus("error");
+        return;
+      }
+      setStatus("success");
+    } catch {
+      setErrorMessage("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
   };
 
   return (
@@ -246,11 +277,11 @@ export function BookDemoDialog({
                     value={doctorName}
                     onChange={(e) => setDoctorName(e.target.value)}
                     placeholder="Dr. Jane Doe"
-                    aria-invalid={touched && !doctorValid}
+                    aria-invalid={touched && !!fieldErrors.doctorName}
                   />
-                  {touched && !doctorValid && (
+                  {touched && fieldErrors.doctorName && (
                     <p className="text-xs text-destructive">
-                      Please enter your name.
+                      {fieldErrors.doctorName[0]}
                     </p>
                   )}
                 </div>
@@ -261,11 +292,11 @@ export function BookDemoDialog({
                     value={clinicName}
                     onChange={(e) => setClinicName(e.target.value)}
                     placeholder="Choice Dental Care"
-                    aria-invalid={touched && !clinicValid}
+                    aria-invalid={touched && !!fieldErrors.clinicName}
                   />
-                  {touched && !clinicValid && (
+                  {touched && fieldErrors.clinicName && (
                     <p className="text-xs text-destructive">
-                      Please enter your clinic name.
+                      {fieldErrors.clinicName[0]}
                     </p>
                   )}
                 </div>
@@ -278,10 +309,12 @@ export function BookDemoDialog({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="jane@clinic.com"
-                      aria-invalid={touched && !emailValid}
+                      aria-invalid={touched && !!fieldErrors.email}
                     />
-                    {touched && !emailValid && (
-                      <p className="text-xs text-destructive">Invalid email.</p>
+                    {touched && fieldErrors.email && (
+                      <p className="text-xs text-destructive">
+                        {fieldErrors.email[0]}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-1.5">
@@ -292,15 +325,22 @@ export function BookDemoDialog({
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
                       placeholder="+1 555 010 1234"
-                      aria-invalid={touched && !whatsappValid}
+                      aria-invalid={touched && !!fieldErrors.whatsapp}
                     />
-                    {touched && !whatsappValid && (
+                    {touched && fieldErrors.whatsapp && (
                       <p className="text-xs text-destructive">
-                        Invalid number.
+                        {fieldErrors.whatsapp[0]}
                       </p>
                     )}
                   </div>
                 </div>
+
+                {status === "error" && (
+                  <p className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    {errorMessage}
+                  </p>
+                )}
 
                 <DialogFooter className="items-center justify-between sm:justify-between">
                   <Button

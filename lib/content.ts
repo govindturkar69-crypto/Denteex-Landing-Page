@@ -183,12 +183,13 @@ export const footerLinks = {
   ],
   resources: [
     { label: "FAQ", href: "#faq" },
-    { label: "Support", href: "#" },
+    { label: "Full FAQ", href: "/faq" },
+    { label: "Docs", href: "/docs" },
     { label: "Status", href: "#" },
   ],
   legal: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
   ],
 };
 

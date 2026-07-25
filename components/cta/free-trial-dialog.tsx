@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { dashboardPreviewStats, onboardingSteps } from "@/lib/cta-content";
+import { freeTrialSchema } from "@/lib/schemas";
 
 type Status = "form" | "loading" | "success";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function FreeTrialDialog({
   open,
@@ -39,11 +38,11 @@ export function FreeTrialDialog({
   const [practiceName, setPracticeName] = useState("");
   const [touched, setTouched] = useState(false);
 
-  const doctorValid = doctorName.trim().length > 1;
-  const emailValid = EMAIL_RE.test(email);
-  const passwordValid = password.length >= 8;
-  const practiceValid = practiceName.trim().length > 1;
-  const formValid = doctorValid && emailValid && passwordValid && practiceValid;
+  const parsed = useMemo(
+    () => freeTrialSchema.safeParse({ doctorName, email, password, practiceName }),
+    [doctorName, email, password, practiceName]
+  );
+  const fieldErrors = parsed.success ? {} : parsed.error.flatten().fieldErrors;
 
   useEffect(() => {
     if (status !== "loading" || loadingStep >= onboardingSteps.length) return;
@@ -76,7 +75,7 @@ export function FreeTrialDialog({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!formValid || status !== "form") return;
+    if (!parsed.success || status !== "form") return;
     setStatus("loading");
   };
 
@@ -103,11 +102,11 @@ export function FreeTrialDialog({
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
                   placeholder="Dr. Jane Doe"
-                  aria-invalid={touched && !doctorValid}
+                  aria-invalid={touched && !!fieldErrors.doctorName}
                 />
-                {touched && !doctorValid && (
+                {touched && fieldErrors.doctorName && (
                   <p className="text-xs text-destructive">
-                    Please enter your name.
+                    {fieldErrors.doctorName[0]}
                   </p>
                 )}
               </div>
@@ -119,10 +118,10 @@ export function FreeTrialDialog({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@clinic.com"
-                  aria-invalid={touched && !emailValid}
+                  aria-invalid={touched && !!fieldErrors.email}
                 />
-                {touched && !emailValid && (
-                  <p className="text-xs text-destructive">Invalid email.</p>
+                {touched && fieldErrors.email && (
+                  <p className="text-xs text-destructive">{fieldErrors.email[0]}</p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -134,7 +133,7 @@ export function FreeTrialDialog({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    aria-invalid={touched && !passwordValid}
+                    aria-invalid={touched && !!fieldErrors.password}
                     className="pr-9"
                   />
                   <button
@@ -150,9 +149,9 @@ export function FreeTrialDialog({
                     )}
                   </button>
                 </div>
-                {touched && !passwordValid && (
+                {touched && fieldErrors.password && (
                   <p className="text-xs text-destructive">
-                    Password must be at least 8 characters.
+                    {fieldErrors.password[0]}
                   </p>
                 )}
               </div>
@@ -163,11 +162,11 @@ export function FreeTrialDialog({
                   value={practiceName}
                   onChange={(e) => setPracticeName(e.target.value)}
                   placeholder="Choice Dental Care"
-                  aria-invalid={touched && !practiceValid}
+                  aria-invalid={touched && !!fieldErrors.practiceName}
                 />
-                {touched && !practiceValid && (
+                {touched && fieldErrors.practiceName && (
                   <p className="text-xs text-destructive">
-                    Please enter your practice name.
+                    {fieldErrors.practiceName[0]}
                   </p>
                 )}
               </div>

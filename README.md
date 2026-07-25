@@ -10,6 +10,10 @@ A 3D-animated, fully responsive landing page for **Denteex**, a cloud-based dent
 - Sticky glassmorphism navbar with scroll-aware blur and a mobile drawer
 - Feature grid, live "product dashboard" mockup with mouse-tilt 3D, animated stat counters, testimonial, and FAQ accordion
 - Pricing section with a monthly/annual billing toggle and a highlighted "Most Popular" tier
+- **Fully functional CTA modals** — Book a Demo (2-step wizard with a confetti + animated-checkmark success state), Start Free Trial (validated signup + simulated onboarding loader), and Contact Sales (enterprise inquiry form), all Zod-validated; Book a Demo and Contact Sales post to real, rate-limited API routes (`/api/book-demo`, `/api/contact`)
+- An interactive, paginated pitch-deck walkthrough at [`/tour`](./app/tour)
+- Markdown-driven `/privacy`, `/terms`, `/docs`, and `/faq` pages (see `content/`), styled with Tailwind Typography
+- Security headers (CSP, HSTS, and more) and same-origin + rate-limit protection on API routes — see [SECURITY.md](./SECURITY.md)
 - Full dark/light theme toggle with persisted preference
 - Scroll-reveal and stagger animations throughout (Framer Motion), all respecting `prefers-reduced-motion`
 - Fully responsive from 375px phones to large desktop displays
@@ -17,11 +21,15 @@ A 3D-animated, fully responsive landing page for **Denteex**, a cloud-based dent
 ## Tech Stack
 
 - [Next.js 16](https://nextjs.org) (App Router, TypeScript)
-- [Tailwind CSS v4](https://tailwindcss.com)
+- [Tailwind CSS v4](https://tailwindcss.com) + [Tailwind Typography](https://github.com/tailwindlabs/tailwindcss-typography)
 - [shadcn/ui](https://ui.shadcn.com) + [Lucide](https://lucide.dev) icons
 - [Framer Motion](https://www.framer.com/motion/)
 - [React Three Fiber](https://r3f.docs.pmnd.rs) + [drei](https://github.com/pmndrs/drei) + [Three.js](https://threejs.org)
+- [Zod](https://zod.dev) — shared client/server validation
+- [marked](https://marked.js.org) — markdown rendering for `/privacy`, `/terms`, `/docs`, `/faq`
 - [next-themes](https://github.com/pacocoursey/next-themes)
+
+See [REQUIREMENTS.md](./REQUIREMENTS.md) for the full architecture and requirements checklist, and [SECURITY.md](./SECURITY.md) for what's actually implemented security-wise (and what isn't).
 
 ## Content Note
 
@@ -31,6 +39,7 @@ Brand messaging, feature set, and the customer testimonial are adapted from the 
 
 ```bash
 npm install
+cp .env.example .env.local   # optional locally; see .env.example
 npm run dev
 ```
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,10 +24,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { budgetRanges } from "@/lib/cta-content";
+import { contactSalesSchema } from "@/lib/schemas";
 
-type Status = "form" | "loading" | "success";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type Status = "form" | "loading" | "success" | "error";
 
 export function ContactSalesDialog({
   open,
@@ -39,6 +38,7 @@ export function ContactSalesDialog({
   plan?: string;
 }) {
   const [status, setStatus] = useState<Status>("form");
+  const [errorMessage, setErrorMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [clinicName, setClinicName] = useState("");
@@ -47,14 +47,24 @@ export function ContactSalesDialog({
   const [integrationNeeds, setIntegrationNeeds] = useState("");
   const [touched, setTouched] = useState(false);
 
-  const nameValid = name.trim().length > 1;
-  const emailValid = EMAIL_RE.test(email);
-  const clinicValid = clinicName.trim().length > 1;
-  const chairsValid = chairs !== "" && Number(chairs) > 0;
-  const formValid = nameValid && emailValid && clinicValid && chairsValid;
+  const parsed = useMemo(
+    () =>
+      contactSalesSchema.safeParse({
+        name,
+        email,
+        clinicName,
+        chairs: chairs === "" ? undefined : chairs,
+        budget,
+        integrationNeeds,
+      }),
+    [name, email, clinicName, chairs, budget, integrationNeeds]
+  );
+
+  const fieldErrors = parsed.success ? {} : parsed.error.flatten().fieldErrors;
 
   const reset = () => {
     setStatus("form");
+    setErrorMessage("");
     setName("");
     setEmail("");
     setClinicName("");
@@ -72,10 +82,28 @@ export function ContactSalesDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!formValid || status === "loading") return;
+    if (!parsed.success || status === "loading") return;
+
     setStatus("loading");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setStatus("success");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        setErrorMessage(
+          json?.error ?? "Something went wrong. Please try again."
+        );
+        setStatus("error");
+        return;
+      }
+      setStatus("success");
+    } catch {
+      setErrorMessage("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
   };
 
   return (
@@ -123,11 +151,11 @@ export function ContactSalesDialog({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Dr. Jane Doe"
-                    aria-invalid={touched && !nameValid}
+                    aria-invalid={touched && !!fieldErrors.name}
                   />
-                  {touched && !nameValid && (
+                  {touched && fieldErrors.name && (
                     <p className="text-xs text-destructive">
-                      Please enter your name.
+                      {fieldErrors.name[0]}
                     </p>
                   )}
                 </div>
@@ -139,10 +167,12 @@ export function ContactSalesDialog({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="jane@clinic.com"
-                    aria-invalid={touched && !emailValid}
+                    aria-invalid={touched && !!fieldErrors.email}
                   />
-                  {touched && !emailValid && (
-                    <p className="text-xs text-destructive">Invalid email.</p>
+                  {touched && fieldErrors.email && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.email[0]}
+                    </p>
                   )}
                 </div>
               </div>
@@ -155,11 +185,11 @@ export function ContactSalesDialog({
                     value={clinicName}
                     onChange={(e) => setClinicName(e.target.value)}
                     placeholder="Choice Dental Group"
-                    aria-invalid={touched && !clinicValid}
+                    aria-invalid={touched && !!fieldErrors.clinicName}
                   />
-                  {touched && !clinicValid && (
+                  {touched && fieldErrors.clinicName && (
                     <p className="text-xs text-destructive">
-                      Please enter a clinic name.
+                      {fieldErrors.clinicName[0]}
                     </p>
                   )}
                 </div>
@@ -172,11 +202,11 @@ export function ContactSalesDialog({
                     value={chairs}
                     onChange={(e) => setChairs(e.target.value)}
                     placeholder="12"
-                    aria-invalid={touched && !chairsValid}
+                    aria-invalid={touched && !!fieldErrors.chairs}
                   />
-                  {touched && !chairsValid && (
+                  {touched && fieldErrors.chairs && (
                     <p className="text-xs text-destructive">
-                      Enter a number greater than 0.
+                      {fieldErrors.chairs[0]}
                     </p>
                   )}
                 </div>
@@ -214,6 +244,13 @@ export function ContactSalesDialog({
                   rows={3}
                 />
               </div>
+
+              {status === "error" && (
+                <p className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  <AlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage}
+                </p>
+              )}
 
               <DialogFooter>
                 <Button type="submit" disabled={status === "loading"} className="w-full">
