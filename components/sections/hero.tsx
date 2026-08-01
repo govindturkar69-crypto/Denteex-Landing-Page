@@ -68,9 +68,10 @@ export function Hero() {
             variants={item}
             className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
           >
-            <button
+            <motion.button
               type="button"
               onClick={() => openBookDemo()}
+              whileTap={{ scale: 0.97 }}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "h-11 w-full px-6 text-base sm:w-auto"
@@ -78,7 +79,7 @@ export function Hero() {
             >
               {hero.primaryCta.label}
               <ArrowRight className="size-4" />
-            </button>
+            </motion.button>
             <Link
               href={hero.secondaryCta.href}
               className={cn(

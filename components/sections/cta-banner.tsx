@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { RevealOnScroll } from "@/components/shared/reveal-on-scroll";
@@ -24,9 +25,10 @@ export function CTABanner() {
           {ctaBanner.subheadline}
         </p>
         <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button
+          <motion.button
             type="button"
             onClick={() => openBookDemo()}
+            whileTap={{ scale: 0.97 }}
             className={cn(
               buttonVariants({ size: "lg", variant: "secondary" }),
               "h-11 w-full px-6 text-base sm:w-auto"
@@ -34,17 +36,18 @@ export function CTABanner() {
           >
             {ctaBanner.primaryCta.label}
             <ArrowRight className="size-4" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="button"
             onClick={() => openContactSales()}
+            whileTap={{ scale: 0.97 }}
             className={cn(
               buttonVariants({ size: "lg", variant: "outline" }),
               "h-11 w-full border-primary-foreground/30 bg-transparent px-6 text-base text-primary-foreground hover:bg-primary-foreground/10 sm:w-auto"
             )}
           >
             {ctaBanner.secondaryCta.label}
-          </button>
+          </motion.button>
         </div>
       </RevealOnScroll>
     </section>

@@ -57,13 +57,14 @@ export function Navbar() {
 
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
-          <button
+          <motion.button
             type="button"
             onClick={() => openBookDemo()}
+            whileTap={{ scale: 0.97 }}
             className={cn(buttonVariants(), "hidden sm:inline-flex")}
           >
             {hero.primaryCta.label}
-          </button>
+          </motion.button>
           <MobileDrawer />
         </div>
       </div>

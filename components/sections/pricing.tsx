@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,9 +92,10 @@ export function Pricing() {
                   <span className="text-sm text-muted-foreground">/mo</span>
                 </div>
 
-                <button
+                <motion.button
                   type="button"
                   onClick={() => handleTierCta(tier.name, tier.cta)}
+                  whileTap={{ scale: 0.97 }}
                   className={cn(
                     buttonVariants({
                       size: "lg",
@@ -103,7 +105,7 @@ export function Pricing() {
                   )}
                 >
                   {tier.cta}
-                </button>
+                </motion.button>
 
                 <ul className="mt-8 flex flex-1 flex-col gap-3">
                   {tier.features.map((feature) => (

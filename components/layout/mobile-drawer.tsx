@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -53,16 +54,17 @@ export function MobileDrawer() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-2 p-4">
-          <button
+          <motion.button
             type="button"
             onClick={() => {
               setOpen(false);
               openBookDemo();
             }}
+            whileTap={{ scale: 0.97 }}
             className={cn(buttonVariants(), "w-full")}
           >
             {hero.primaryCta.label}
-          </button>
+          </motion.button>
         </div>
       </SheetContent>
     </Sheet>
