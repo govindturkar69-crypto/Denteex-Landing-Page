@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Loader2, Mail, MapPin, Phone, Check } from "lucide-react";
+import { AlertCircle, Loader2, Mail, MapPin, Phone, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/shared/logo";
 import { FacebookIcon, InstagramIcon, LinkedinIcon } from "@/components/shared/social-icons";
 import { brand, footerLinks, socials, contact } from "@/lib/content";
+import { newsletterSchema } from "@/lib/schemas";
 
 const socialIcons = {
   Facebook: FacebookIcon,
@@ -15,39 +16,71 @@ const socialIcons = {
   Instagram: InstagramIcon,
 } as const;
 
-type Status = "idle" | "loading" | "success";
+type Status = "idle" | "loading" | "success" | "error";
 
 function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [touched, setTouched] = useState(false);
+
+  const parsed = useMemo(() => newsletterSchema.safeParse({ email }), [email]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || status === "loading") return;
+    setTouched(true);
+    if (!parsed.success || status === "loading") return;
+
     setStatus("loading");
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setStatus("success");
-    setEmail("");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      if (!res.ok) {
+        setStatus("error");
+        return;
+      }
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    }
   };
 
+  const busy = status === "loading" || status === "success";
+
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-sm gap-2">
-      <Input
-        type="email"
-        required
-        placeholder="you@clinic.com"
-        aria-label="Email address"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        disabled={status !== "idle"}
-      />
-      <Button type="submit" disabled={status !== "idle"} className="shrink-0">
-        {status === "loading" && <Loader2 className="size-4 animate-spin" />}
-        {status === "success" && <Check className="size-4" />}
-        {status === "idle" && "Subscribe"}
-        {status === "success" && "Subscribed"}
-      </Button>
-    </form>
+    <div className="w-full max-w-sm">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          type="email"
+          placeholder="you@clinic.com"
+          aria-label="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={busy}
+          aria-invalid={touched && !parsed.success}
+        />
+        <Button type="submit" disabled={busy} className="shrink-0">
+          {status === "loading" && <Loader2 className="size-4 animate-spin" />}
+          {status === "success" && <Check className="size-4" />}
+          {(status === "idle" || status === "error") && "Subscribe"}
+          {status === "success" && "Subscribed"}
+        </Button>
+      </form>
+      {touched && status === "idle" && !parsed.success && (
+        <p className="mt-1.5 text-xs text-destructive">
+          Please enter a valid email address.
+        </p>
+      )}
+      {status === "error" && (
+        <p className="mt-1.5 flex items-center gap-1 text-xs text-destructive">
+          <AlertCircle className="size-3 shrink-0" />
+          Something went wrong. Please try again.
+        </p>
+      )}
+    </div>
   );
 }
 

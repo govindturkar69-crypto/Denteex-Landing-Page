@@ -1,8 +1,22 @@
 import { z } from "zod";
 
-const name = z.string().trim().min(2, "Please enter a name.").max(100);
+/**
+ * Strips HTML tags from free-text input. Zod's type/format checks alone
+ * don't sanitize content — this is a defense-in-depth layer so nothing
+ * resembling markup survives into logs or (if this is ever wired to
+ * storage/email later) downstream rendering.
+ */
+function stripHtml(value: string) {
+  return value.replace(/<[^>]*>/g, "").trim();
+}
+
+function sanitizedText(min: number, max: number, message: string) {
+  return z.string().trim().min(min, message).max(max).transform(stripHtml);
+}
+
+const name = sanitizedText(2, 100, "Please enter a name.");
 const email = z.string().trim().toLowerCase().email("Please enter a valid email address.").max(200);
-const clinicName = z.string().trim().min(2, "Please enter a clinic name.").max(150);
+const clinicName = sanitizedText(2, 150, "Please enter a clinic name.");
 
 const whatsapp = z
   .string()
@@ -37,7 +51,12 @@ export const contactSalesSchema = z.object({
     .positive("Enter a number greater than 0.")
     .max(1000),
   budget: z.string().trim().max(50).optional(),
-  integrationNeeds: z.string().trim().max(1000).optional(),
+  integrationNeeds: z
+    .string()
+    .trim()
+    .max(1000)
+    .transform(stripHtml)
+    .optional(),
 });
 
 export type ContactSalesInput = z.infer<typeof contactSalesSchema>;
@@ -46,7 +65,13 @@ export const freeTrialSchema = z.object({
   doctorName: name,
   email,
   password: z.string().min(8, "Password must be at least 8 characters.").max(200),
-  practiceName: z.string().trim().min(2, "Please enter your practice name.").max(150),
+  practiceName: sanitizedText(2, 150, "Please enter your practice name."),
 });
 
 export type FreeTrialInput = z.infer<typeof freeTrialSchema>;
+
+export const newsletterSchema = z.object({
+  email,
+});
+
+export type NewsletterInput = z.infer<typeof newsletterSchema>;

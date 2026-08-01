@@ -1,33 +1,75 @@
-type Bucket = { count: number; resetAt: number };
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-const buckets = new Map<string, Bucket>();
+const DEFAULT_LIMIT = 5;
+const DEFAULT_WINDOW_MS = 60_000;
 
-/**
- * In-memory fixed-window rate limiter, keyed per process. Resets on cold
- * start and isn't shared across serverless instances — fine for a single
- * dev/demo deployment, not a substitute for Redis-backed limiting at scale.
- * See SECURITY.md.
- */
-export function checkRateLimit(
-  key: string,
-  limit = 5,
-  windowMs = 60_000
-): { allowed: boolean; remaining: number; resetAt: number } {
+// --- Optional Upstash-backed limiter -------------------------------------
+// Activates only if both env vars are set. When they aren't (the default —
+// no Redis instance is configured for this project), every call falls
+// through to the in-memory sliding-window limiter below instead. This is
+// the real fix for the "not shared across serverless instances" gap
+// documented in SECURITY.md, available the moment someone provisions a
+// free Upstash database and sets the two env vars — nothing else to wire.
+//
+// Caveat: the Upstash limiter's window is fixed at module init to the
+// defaults below. Every current caller uses the defaults, so this doesn't
+// matter in practice, but a future caller passing a custom limit/window
+// would only see it honored by the in-memory fallback, not Upstash.
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const upstashLimiter =
+  upstashUrl && upstashToken
+    ? new Ratelimit({
+        redis: new Redis({ url: upstashUrl, token: upstashToken }),
+        limiter: Ratelimit.slidingWindow(DEFAULT_LIMIT, `${DEFAULT_WINDOW_MS / 1000} s`),
+        analytics: false,
+        prefix: "denteex",
+      })
+    : null;
+
+// --- In-memory sliding-window fallback -----------------------------------
+// Keeps a trailing log of request timestamps per key instead of resetting
+// a counter at a fixed window boundary — avoids the classic fixed-window
+// bug where a client can send `limit` requests right before a boundary and
+// another `limit` right after, briefly doubling the effective rate.
+// Per-process only; resets on cold start. See SECURITY.md.
+const requestLog = new Map<string, number[]>();
+
+function checkInMemory(key: string, limit: number, windowMs: number) {
   const now = Date.now();
-  const bucket = buckets.get(key);
+  const windowStart = now - windowMs;
+  const timestamps = (requestLog.get(key) ?? []).filter((t) => t > windowStart);
 
-  if (!bucket || now >= bucket.resetAt) {
-    const resetAt = now + windowMs;
-    buckets.set(key, { count: 1, resetAt });
-    return { allowed: true, remaining: limit - 1, resetAt };
+  if (timestamps.length >= limit) {
+    requestLog.set(key, timestamps);
+    return { allowed: false, remaining: 0, resetAt: timestamps[0] + windowMs };
   }
 
-  if (bucket.count >= limit) {
-    return { allowed: false, remaining: 0, resetAt: bucket.resetAt };
-  }
+  timestamps.push(now);
+  requestLog.set(key, timestamps);
+  return {
+    allowed: true,
+    remaining: limit - timestamps.length,
+    resetAt: now + windowMs,
+  };
+}
 
-  bucket.count += 1;
-  return { allowed: true, remaining: limit - bucket.count, resetAt: bucket.resetAt };
+export async function checkRateLimit(
+  key: string,
+  limit = DEFAULT_LIMIT,
+  windowMs = DEFAULT_WINDOW_MS
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  if (upstashLimiter) {
+    const result = await upstashLimiter.limit(key);
+    return {
+      allowed: result.success,
+      remaining: result.remaining,
+      resetAt: result.reset,
+    };
+  }
+  return checkInMemory(key, limit, windowMs);
 }
 
 export function getClientKey(request: Request): string {

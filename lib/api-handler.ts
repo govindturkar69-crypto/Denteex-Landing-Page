@@ -24,7 +24,7 @@ export async function handleValidatedSubmission<T extends z.ZodTypeAny>({
   }
 
   const clientKey = getClientKey(request);
-  const { allowed, resetAt } = checkRateLimit(
+  const { allowed, resetAt } = await checkRateLimit(
     `${routeName}:${clientKey}`,
     limit,
     windowMs
